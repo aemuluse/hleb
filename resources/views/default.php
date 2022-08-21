@@ -18,9 +18,10 @@
 <body>
     <div id="hl-cont" align="center">
         <img class="container" src="/svg/new logo.svg" width="400" height="400" class="hl-block" alt="HL">
-        <button type="button" class="btn btn-dark button" onclick=" setTimeUNIX() ">Get UNIX time</button>
-        <button type="button" class="btn btn-dark button" onclick=" setTimeMySQL()">Get MySQL time</button>
-        <p id="time"></p>
+        <button type="button" class="btn btn-dark button" onclick=" setTime('UNIX') ">Set UNIX time</button>
+        <button type="button" class="btn btn-dark button" onclick=" setTime('MySQL')">Set MySQL time</button>
+        <br> <br>
+        <p class="h4" id="time"></p>
     </div>
     <br>
     <div class="hl-block">v2</div>

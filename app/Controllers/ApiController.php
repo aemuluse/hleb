@@ -10,17 +10,28 @@ class ApiController extends \MainController
     private $error_message;
     private $id;
 
-    public function get_time_unix() {
-        return time();
+    /**
+     * Возвращает время в секундах в UNIX формате
+     */
+    public function get_time_unix()
+    {
+        return time() + microtime();
     }
 
-    public function get_time_mysql() {
+    /**
+     * Возвращает время в MySQL формате
+     */
+    public function get_time_mysql()
+    {
         return date("Y-m-d H:i:s");
     }
 
-    # Сделать обработку пакетов (batch)
-
-    public function handler() {
+    /**
+     * Проверяет POST запрос и отправляет ответ.
+     * Является входной точкой для маршрута api.
+     */
+    public function handler()
+    {
         $call = Request::getInputBody();
         $request = json_decode($call, true);
 
@@ -33,17 +44,11 @@ class ApiController extends \MainController
         echo json_encode($response);
     }
 
-    private function unbatch(string $call): array
-    {
-        if ($call[0] == '[' and $call[-1] == ']') {
-            $batch = trim($call, "[]");
-            $call = explode(',', $batch);
-        } else {
-            $call = [$call];
-        }
-        return $call;
-    }
-
+    /**
+     * Проверяет корректность json-запроса
+     * @param array|null $request - параметр с массивом из json-запроса
+     * @return bool
+     */
     private function isValid($request): bool
     {
         if ($request === null) {
@@ -53,11 +58,14 @@ class ApiController extends \MainController
             return false;
         }
 
-        if (count($request) !== 3 ||
-            !(isset($request["jsonrpc"]) && isset($request["method"]) && isset($request["id"]))) {
+        if (
+            count($request) !== 3 ||
+            !(isset($request["jsonrpc"]) && isset($request["method"]) && isset($request["id"]))
+        ) {
             $this->error_code = -32600;
             $this->error_message = "Invalid Request";
             $this->id = null;
+            return false;
         }
 
         if (!($request["method"] === "get_time_unix" || $request["method"] === "get_time_mysql")) {
@@ -66,6 +74,7 @@ class ApiController extends \MainController
             $this->id = $request["id"];
             return false;
         }
+
         if ($request["params"] !== null) {
             $this->error_code = -32602;
             $this->error_message = "Invalid params";
@@ -76,7 +85,14 @@ class ApiController extends \MainController
         return true;
     }
 
-    private function constructResponse(array $request): array {
+    /**
+     * Собирает json-ответ с результатом выполнения
+     * функции в массив
+     * @param array $request - массив из json-запроса
+     * @return array
+     */
+    private function constructResponse(array $request): array
+    {
         $method = $request["method"];
         $result = $this->{$method}();
 
@@ -87,25 +103,23 @@ class ApiController extends \MainController
         );
     }
 
-    private function constructError(): array {
-        $error_code = $this->error_code;
-        $error_message = $this->error_message;
+    /**
+     * Собирает json-ответ в виде массива в случае ошибки в запросе
+     * @return array
+     */
+    private function constructError(): array
+    {
+        $code = $this->error_code;
+        $message = $this->error_message;
         $id = $this->id;
 
         return array(
             "jsonrpc" => "2.0",
             "error" => array(
-                "code" => $error_code,
-                "message" => $error_message
+                "code" => $code,
+                "message" => $message
             ),
             "id" => $id
         );
     }
-
-
-    /**
-     * https://ufa.hh.ru/applicant/negotiations/item?topicId=2842097229&chatId=2838436855&hhtmFrom=negotiation_list
-     * https://laravel-news.com/json-rpc-server-for-laravel
-     * https://overcoder.net/q/913238/%D0%BE%D0%B1%D0%BD%D0%BE%D0%B2%D0%BB%D1%8F%D1%82%D1%8C-%D0%B2%D1%80%D0%B5%D0%BC%D1%8F-%D0%B4%D0%B8%D0%BD%D0%B0%D0%BC%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8-%D1%81-%D0%BF%D0%BE%D0%BC%D0%BE%D1%89%D1%8C%D1%8E-php-ajax
-     */
 }
